@@ -4,6 +4,7 @@ import com.example.keklock.profile.domain.Profile;
 import com.example.keklock.profile.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "spring.data.redis.enabled", havingValue = "false", matchIfMissing = true)
 public class InMemoryFeedCacheService implements FeedCacheService {
 
     private final Map<Long, List<FeedEntry>> feedCache = new ConcurrentHashMap<>();

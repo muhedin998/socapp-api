@@ -1,5 +1,6 @@
 package com.example.keklock.auth.config;
 
+import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,24 +16,21 @@ public class KeycloakConfig {
     @Value("${keycloak.realm}")
     private String realm;
 
-    @Value("${keycloak.admin.username}")
-    private String adminUsername;
+    // Use the path from the 'spring:' section of your YAML
+    @Value("${spring.security.oauth2.client.registration.keycloak.client-id}")
+    private String clientId;
 
-    @Value("${keycloak.admin.password}")
-    private String adminPassword;
-
-    @Value("${keycloak.admin.client-id}")
-    private String adminClientId;
+    @Value("${spring.security.oauth2.client.registration.keycloak.client-secret}")
+    private String clientSecret;
 
     @Bean
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
-            .serverUrl(serverUrl)
-            .realm(realm)
-            .grantType("password")
-            .clientId(adminClientId)
-            .username(adminUsername)
-            .password(adminPassword)
-            .build();
+                .serverUrl(serverUrl)
+                .realm(realm)
+                .grantType(OAuth2Constants.CLIENT_CREDENTIALS) // Machine-to-Machine
+                .clientId(clientId) // This was null before, now it will find "spring-boot-app"
+                .clientSecret(clientSecret)
+                .build();
     }
 }

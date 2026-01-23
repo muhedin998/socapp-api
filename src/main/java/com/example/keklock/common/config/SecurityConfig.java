@@ -23,6 +23,7 @@ public class SecurityConfig {
                 // Public endpoints - no authentication required
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/profiles/{username}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/posts/{postId}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/posts/user/{username}").permitAll()

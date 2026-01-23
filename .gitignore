@@ -18,9 +18,7 @@ target/
 *.iws
 *.iml
 *.ipr
-*.md
 *.ps1
-*.sh
 *.cmd
 mvnw
 instruction.txt
@@ -38,3 +36,24 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Keycloak Backups (contains sensitive data) ###
+keycloak-backup/
+*.tar.gz
+
+### Node/NPM (shouldn't be here but just in case) ###
+node_modules/
+npm-debug.log*
+package-lock.json
+
+### Logs ###
+*.log
+
+### OS Files ###
+.DS_Store
+Thumbs.db
+
+### Temporary Files ###
+*.tmp
+*.temp
+*~

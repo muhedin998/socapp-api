@@ -7,7 +7,7 @@ spring:
 
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/keycloak-db
+    url: jdbc:postgresql://localhost:5432/keycloak_db
     username: keycloak
     password: password123
     driver-class-name: org.postgresql.Driver
@@ -26,6 +26,20 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     open-in-view: false
+
+  # Redis Configuration
+  data:
+    redis:
+      enabled: true
+      host: localhost
+      port: 6379
+      password:
+      timeout: 60000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
 
   # Security Configuration
   security:
@@ -53,20 +67,6 @@ keycloak:
     username: admin
     password: admin
     client-id: admin-cli
-
-# Redis Configuration (Optional - enable when Redis is available)
-  data:
-    redis:
-      enabled: true
-      host: localhost
-      port: 6379
-      password:
-      timeout: 60000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
 
 # Actuator Configuration (Health Checks & Monitoring)
 management:
