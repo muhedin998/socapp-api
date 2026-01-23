@@ -1,0 +1,98 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: social-network-app
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/keycloak-db
+    username: keycloak
+    password: password123
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+
+  # JPA / Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+
+  # Security Configuration
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: spring-boot-app
+            client-secret: ThHfDLkKcCi0CUYBFCGQlkd1ObXhkKbk
+            scope: openid, profile, email
+            authorization-grant-type: authorization_code
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/realms/my-realm
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/my-realm
+          jwk-set-uri: http://localhost:8080/realms/my-realm/protocol/openid-connect/certs
+
+# Keycloak Admin Client Configuration
+keycloak:
+  auth-server-url: http://localhost:8080
+  realm: my-realm
+  admin:
+    username: admin
+    password: admin
+    client-id: admin-cli
+
+# Redis Configuration (Optional - enable when Redis is available)
+  data:
+    redis:
+      enabled: true
+      host: localhost
+      port: 6379
+      password:
+      timeout: 60000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+# Actuator Configuration (Health Checks & Monitoring)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true
+
+# Application Info
+info:
+  app:
+    name: Social Network API
+    description: Social networking platform with Keycloak integration
+    version: 1.0.0
+    phase: Phase 4 - Optimization Complete
+
+# Logging Configuration
+logging:
+  level:
+    com.example.keklock: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
