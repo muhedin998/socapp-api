@@ -30,23 +30,22 @@ public class RedisFeedCacheService implements FeedCacheService {
 
     @Override
     public void addToFollowerFeeds(Long authorId, FeedEntry feedEntry) {
-        Profile author = profileRepository.findById(authorId).orElse(null);
-        if (author == null) {
-            log.warn("Author not found with id: {}", authorId);
-            return;
-        }
+        profileRepository.findById(authorId).ifPresentOrElse(
+            author -> {
+                author.getFollowers().forEach(follower -> {
+                    String key = getUserFeedKey(follower.getId());
+                    redisTemplate.opsForList().leftPush(key, feedEntry);
+                    redisTemplate.expire(key, FEED_TTL_HOURS, TimeUnit.HOURS);
+                    log.debug("Redis: Added post {} to user {}'s feed", feedEntry.postId(), follower.getId());
+                });
 
-        author.getFollowers().forEach(follower -> {
-            String key = getUserFeedKey(follower.getId());
-            redisTemplate.opsForList().leftPush(key, feedEntry);
-            redisTemplate.expire(key, FEED_TTL_HOURS, TimeUnit.HOURS);
-            log.debug("Redis: Added post {} to user {}'s feed", feedEntry.postId(), follower.getId());
-        });
-
-        String authorKey = getUserFeedKey(authorId);
-        redisTemplate.opsForList().leftPush(authorKey, feedEntry);
-        redisTemplate.expire(authorKey, FEED_TTL_HOURS, TimeUnit.HOURS);
-        log.debug("Redis: Added post {} to author {}'s own feed", feedEntry.postId(), authorId);
+                String authorKey = getUserFeedKey(authorId);
+                redisTemplate.opsForList().leftPush(authorKey, feedEntry);
+                redisTemplate.expire(authorKey, FEED_TTL_HOURS, TimeUnit.HOURS);
+                log.debug("Redis: Added post {} to author {}'s own feed", feedEntry.postId(), authorId);
+            },
+            () -> log.warn("Author not found with id: {}", authorId)
+        );
     }
 
     @Override

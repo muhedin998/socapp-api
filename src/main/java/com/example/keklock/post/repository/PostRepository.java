@@ -16,9 +16,9 @@ import java.util.UUID;
 public interface PostRepository extends JpaRepository<Post, UUID> {
     Page<Post> findByAuthorOrderByCreatedAtDesc(Profile author, Pageable pageable);
 
-    @Query("SELECT p FROM Post p WHERE p.author IN :authors ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Post p JOIN FETCH p.author WHERE p.author IN :authors ORDER BY p.createdAt DESC")
     Page<Post> findByAuthorsIn(@Param("authors") List<Profile> authors, Pageable pageable);
 
-    @Query("SELECT p FROM Post p WHERE p.author.username = :username ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Post p JOIN FETCH p.author WHERE p.author.username = :username ORDER BY p.createdAt DESC")
     Page<Post> findByAuthorUsername(@Param("username") String username, Pageable pageable);
 }

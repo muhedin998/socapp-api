@@ -120,10 +120,11 @@ public class PostController {
     }
 
     @GetMapping("/{postId}/comments")
-    public ResponseEntity<ApiResponse<List<CommentResponse>>> getPostComments(
-        @PathVariable UUID postId
+    public ResponseEntity<ApiResponse<Page<CommentResponse>>> getPostComments(
+        @PathVariable UUID postId,
+        @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        List<CommentResponse> comments = postService.getPostComments(postId);
+        Page<CommentResponse> comments = postService.getPostComments(postId, pageable);
         return ResponseEntity.ok(ApiResponse.success(comments));
     }
 

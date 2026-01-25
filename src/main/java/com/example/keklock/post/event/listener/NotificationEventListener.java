@@ -25,24 +25,23 @@ public class NotificationEventListener {
     public void handlePostLiked(PostLikedEvent event) {
         log.info("Notification: {} liked post (postId: {})", event.likerUsername(), event.postId());
         
-        Post post = postRepository.findById(event.postId()).orElse(null);
-        if (post == null) {
-            log.warn("Post not found for notification: {}", event.postId());
-            return;
-        }
-
-        try {
-            notificationService.createNotification(
-                post.getAuthor().getId(),
-                event.likerId(),
-                NotificationType.POST_LIKED,
-                event.postId(),
-                "POST",
-                null
-            );
-        } catch (Exception e) {
-            log.error("Failed to create like notification for post: {}", event.postId(), e);
-        }
+        postRepository.findById(event.postId()).ifPresentOrElse(
+            post -> {
+                try {
+                    notificationService.createNotification(
+                        post.getAuthor().getId(),
+                        event.likerId(),
+                        NotificationType.POST_LIKED,
+                        event.postId(),
+                        "POST",
+                        null
+                    );
+                } catch (Exception e) {
+                    log.error("Failed to create like notification for post: {}", event.postId(), e);
+                }
+            },
+            () -> log.warn("Post not found for notification: {}", event.postId())
+        );
     }
 
     @Async
@@ -50,23 +49,22 @@ public class NotificationEventListener {
     public void handleCommentAdded(CommentAddedEvent event) {
         log.info("Notification: {} commented on post (postId: {})", event.commenterUsername(), event.postId());
         
-        Post post = postRepository.findById(event.postId()).orElse(null);
-        if (post == null) {
-            log.warn("Post not found for notification: {}", event.postId());
-            return;
-        }
-
-        try {
-            notificationService.createNotification(
-                post.getAuthor().getId(),
-                event.commenterId(),
-                NotificationType.POST_COMMENTED,
-                event.postId(),
-                "POST",
-                null
-            );
-        } catch (Exception e) {
-            log.error("Failed to create comment notification for post: {}", event.postId(), e);
-        }
+        postRepository.findById(event.postId()).ifPresentOrElse(
+            post -> {
+                try {
+                    notificationService.createNotification(
+                        post.getAuthor().getId(),
+                        event.commenterId(),
+                        NotificationType.POST_COMMENTED,
+                        event.postId(),
+                        "POST",
+                        null
+                    );
+                } catch (Exception e) {
+                    log.error("Failed to create comment notification for post: {}", event.postId(), e);
+                }
+            },
+            () -> log.warn("Post not found for notification: {}", event.postId())
+        );
     }
 }

@@ -4,8 +4,8 @@ import com.example.keklock.auth.dto.UserRegistrationRequest;
 import com.example.keklock.auth.dto.UserRegistrationResponse;
 import com.example.keklock.auth.port.IdentityProviderPort;
 import com.example.keklock.common.exception.DuplicateResourceException;
-import com.example.keklock.profile.domain.Profile;
 import com.example.keklock.profile.repository.ProfileRepository;
+import com.example.keklock.profile.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +18,7 @@ public class RegistrationOrchestrator {
 
     private final IdentityProviderPort identityProvider;
     private final ProfileRepository profileRepository;
+    private final ProfileService profileService;
 
     @Transactional
     public UserRegistrationResponse registerNewUser(UserRegistrationRequest request) {
@@ -33,15 +34,13 @@ public class RegistrationOrchestrator {
             keycloakUuid = identityProvider.createUser(request);
             log.info("User created in Keycloak with ID: {}", keycloakUuid);
 
-            Profile profile = new Profile();
-            profile.setIdentityId(keycloakUuid);
-            profile.setUsername(request.username());
-            profile.setEmail(request.email());
-            profile.setFirstName(request.firstName());
-            profile.setLastName(request.lastName());
-
-            profileRepository.save(profile);
-            log.info("Profile created in database for user: {}", request.username());
+            profileService.createProfile(
+                keycloakUuid,
+                request.username(),
+                request.email(),
+                request.firstName(),
+                request.lastName()
+            );
 
             return new UserRegistrationResponse(
                 keycloakUuid,

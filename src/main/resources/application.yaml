@@ -9,7 +9,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/keycloak_db
     username: keycloak
-    password: password123
+    password: ${DB_PASSWORD:password123}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -33,7 +33,7 @@ spring:
       enabled: true
       host: localhost
       port: 6379
-      password:
+      password: ${REDIS_PASSWORD:}
       timeout: 60000ms
       lettuce:
         pool:
@@ -48,7 +48,7 @@ spring:
         registration:
           keycloak:
             client-id: spring-boot-app
-            client-secret: ThHfDLkKcCi0CUYBFCGQlkd1ObXhkKbk
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:gzDmPN5e3OGnSpJ02wSp326Zb9ml4klW}
             scope: openid, profile, email
             authorization-grant-type: authorization_code
         provider:
@@ -64,8 +64,8 @@ keycloak:
   auth-server-url: http://localhost:8080
   realm: my-realm
   admin:
-    username: admin
-    password: admin
+    username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+    password: ${KEYCLOAK_ADMIN_PASSWORD:admin}
     client-id: admin-cli
 
 # Actuator Configuration (Health Checks & Monitoring)

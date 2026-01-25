@@ -6,7 +6,7 @@ import com.example.keklock.notification.domain.NotificationType;
 import com.example.keklock.notification.dto.*;
 import com.example.keklock.notification.service.NotificationService;
 import com.example.keklock.notification.service.NotificationPreferenceService;
-import com.example.keklock.profile.repository.ProfileRepository;
+import com.example.keklock.profile.service.ProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class NotificationController {
 
     private final NotificationService notificationService;
     private final NotificationPreferenceService preferenceService;
-    private final ProfileRepository profileRepository;
+    private final ProfileService profileService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getNotifications(
@@ -185,8 +185,6 @@ public class NotificationController {
     }
 
     private Long getUserId(String identityId) {
-        return profileRepository.findByIdentityId(identityId)
-            .orElseThrow(() -> new IllegalStateException("Profile not found for identity: " + identityId))
-            .getId();
+        return profileService.getUserIdByIdentityId(identityId);
     }
 }

@@ -26,25 +26,13 @@ public class FeedCacheEventListener {
     public void handlePostCreated(PostCreatedEvent event) {
         log.info("CQRS: Adding post {} to followers' feeds", event.postId());
 
-        Post post = postRepository.findById(event.postId()).orElse(null);
-        if (post == null) {
-            log.warn("Post not found: {}", event.postId());
-            return;
-        }
-
-        FeedEntry feedEntry = new FeedEntry(
-            post.getId(),
-            post.getAuthor().getUsername(),
-            post.getAuthor().getAvatarUrl(),
-            post.getContent(),
-            post.getImageUrl(),
-            post.getLikesCount(),
-            post.getCommentsCount(),
-            post.getCreatedAt(),
-            post.getUpdatedAt()
+        postRepository.findById(event.postId()).ifPresentOrElse(
+            post -> {
+                FeedEntry feedEntry = createFeedEntryFromPost(post);
+                feedCacheService.addToFollowerFeeds(event.authorId(), feedEntry);
+            },
+            () -> log.warn("Post not found: {}", event.postId())
         );
-
-        feedCacheService.addToFollowerFeeds(event.authorId(), feedEntry);
     }
 
     @Async
@@ -52,25 +40,13 @@ public class FeedCacheEventListener {
     public void handlePostLiked(PostLikedEvent event) {
         log.info("CQRS: Updating like count for post {}", event.postId());
 
-        Post post = postRepository.findById(event.postId()).orElse(null);
-        if (post == null) {
-            log.warn("Post not found: {}", event.postId());
-            return;
-        }
-
-        FeedEntry updatedEntry = new FeedEntry(
-            post.getId(),
-            post.getAuthor().getUsername(),
-            post.getAuthor().getAvatarUrl(),
-            post.getContent(),
-            post.getImageUrl(),
-            post.getLikesCount(),
-            post.getCommentsCount(),
-            post.getCreatedAt(),
-            post.getUpdatedAt()
+        postRepository.findById(event.postId()).ifPresentOrElse(
+            post -> {
+                FeedEntry updatedEntry = createFeedEntryFromPost(post);
+                feedCacheService.updateFeedEntry(event.postId(), updatedEntry);
+            },
+            () -> log.warn("Post not found: {}", event.postId())
         );
-
-        feedCacheService.updateFeedEntry(event.postId(), updatedEntry);
     }
 
     @Async
@@ -78,13 +54,17 @@ public class FeedCacheEventListener {
     public void handleCommentAdded(CommentAddedEvent event) {
         log.info("CQRS: Updating comment count for post {}", event.postId());
 
-        Post post = postRepository.findById(event.postId()).orElse(null);
-        if (post == null) {
-            log.warn("Post not found: {}", event.postId());
-            return;
-        }
+        postRepository.findById(event.postId()).ifPresentOrElse(
+            post -> {
+                FeedEntry updatedEntry = createFeedEntryFromPost(post);
+                feedCacheService.updateFeedEntry(event.postId(), updatedEntry);
+            },
+            () -> log.warn("Post not found: {}", event.postId())
+        );
+    }
 
-        FeedEntry updatedEntry = new FeedEntry(
+    private FeedEntry createFeedEntryFromPost(Post post) {
+        return new FeedEntry(
             post.getId(),
             post.getAuthor().getUsername(),
             post.getAuthor().getAvatarUrl(),
@@ -95,7 +75,5 @@ public class FeedCacheEventListener {
             post.getCreatedAt(),
             post.getUpdatedAt()
         );
-
-        feedCacheService.updateFeedEntry(event.postId(), updatedEntry);
     }
 }

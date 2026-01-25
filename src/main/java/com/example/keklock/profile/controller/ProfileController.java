@@ -6,12 +6,14 @@ import com.example.keklock.profile.dto.UpdateProfileRequest;
 import com.example.keklock.profile.service.ProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -68,18 +70,20 @@ public class ProfileController {
     }
 
     @GetMapping("/{username}/followers")
-    public ResponseEntity<ApiResponse<Set<ProfileResponse>>> getFollowers(
-        @PathVariable String username
+    public ResponseEntity<ApiResponse<Page<ProfileResponse>>> getFollowers(
+        @PathVariable String username,
+        @PageableDefault(size = 20) Pageable pageable
     ) {
-        Set<ProfileResponse> followers = profileService.getFollowers(username);
+        Page<ProfileResponse> followers = profileService.getFollowers(username, pageable);
         return ResponseEntity.ok(ApiResponse.success(followers));
     }
 
     @GetMapping("/{username}/following")
-    public ResponseEntity<ApiResponse<Set<ProfileResponse>>> getFollowing(
-        @PathVariable String username
+    public ResponseEntity<ApiResponse<Page<ProfileResponse>>> getFollowing(
+        @PathVariable String username,
+        @PageableDefault(size = 20) Pageable pageable
     ) {
-        Set<ProfileResponse> following = profileService.getFollowing(username);
+        Page<ProfileResponse> following = profileService.getFollowing(username, pageable);
         return ResponseEntity.ok(ApiResponse.success(following));
     }
 }

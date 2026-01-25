@@ -22,19 +22,18 @@ public class InMemoryFeedCacheService implements FeedCacheService {
 
     @Override
     public void addToFollowerFeeds(Long authorId, FeedEntry feedEntry) {
-        Profile author = profileRepository.findById(authorId).orElse(null);
-        if (author == null) {
-            log.warn("Author not found with id: {}", authorId);
-            return;
-        }
+        profileRepository.findById(authorId).ifPresentOrElse(
+            author -> {
+                author.getFollowers().forEach(follower -> {
+                    feedCache.computeIfAbsent(follower.getId(), k -> new ArrayList<>()).add(feedEntry);
+                    log.debug("Added post {} to user {}'s feed", feedEntry.postId(), follower.getId());
+                });
 
-        author.getFollowers().forEach(follower -> {
-            feedCache.computeIfAbsent(follower.getId(), k -> new ArrayList<>()).add(feedEntry);
-            log.debug("Added post {} to user {}'s feed", feedEntry.postId(), follower.getId());
-        });
-
-        feedCache.computeIfAbsent(authorId, k -> new ArrayList<>()).add(feedEntry);
-        log.debug("Added post {} to author {}'s own feed", feedEntry.postId(), authorId);
+                feedCache.computeIfAbsent(authorId, k -> new ArrayList<>()).add(feedEntry);
+                log.debug("Added post {} to author {}'s own feed", feedEntry.postId(), authorId);
+            },
+            () -> log.warn("Author not found with id: {}", authorId)
+        );
     }
 
     @Override

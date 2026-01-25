@@ -1,6 +1,9 @@
 package com.example.keklock.post.service;
 
+import com.example.keklock.common.exception.AlreadyLikedException;
+import com.example.keklock.common.exception.NotLikedException;
 import com.example.keklock.common.exception.ResourceNotFoundException;
+import com.example.keklock.common.exception.UnauthorizedActionException;
 import com.example.keklock.post.domain.Comment;
 import com.example.keklock.post.domain.Post;
 import com.example.keklock.post.dto.*;
@@ -90,7 +93,7 @@ public class PostService {
             .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
 
         if (!post.getAuthor().getIdentityId().equals(identityId)) {
-            throw new IllegalArgumentException("You can only delete your own posts");
+            throw new UnauthorizedActionException("You can only delete your own posts");
         }
 
         postRepository.delete(post);
@@ -106,7 +109,7 @@ public class PostService {
             .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
 
         if (post.isLikedBy(user)) {
-            throw new IllegalArgumentException("Already liked this post");
+            throw new AlreadyLikedException("Already liked this post");
         }
 
         post.addLike(user);
@@ -132,7 +135,7 @@ public class PostService {
             .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
 
         if (!post.isLikedBy(user)) {
-            throw new IllegalArgumentException("Post not liked yet");
+            throw new NotLikedException("Post not liked yet");
         }
 
         post.removeLike(user);
@@ -171,15 +174,13 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommentResponse> getPostComments(UUID postId) {
+    public Page<CommentResponse> getPostComments(UUID postId, Pageable pageable) {
         if (!postRepository.existsById(postId)) {
             throw new ResourceNotFoundException("Post not found with id: " + postId);
         }
 
-        List<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(postId);
-        return comments.stream()
-            .map(CommentResponse::from)
-            .collect(Collectors.toList());
+        Page<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable);
+        return comments.map(CommentResponse::from);
     }
 
     @Transactional
@@ -188,7 +189,7 @@ public class PostService {
             .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + commentId));
 
         if (!comment.getAuthor().getIdentityId().equals(identityId)) {
-            throw new IllegalArgumentException("You can only delete your own comments");
+            throw new UnauthorizedActionException("You can only delete your own comments");
         }
 
         commentRepository.delete(comment);
