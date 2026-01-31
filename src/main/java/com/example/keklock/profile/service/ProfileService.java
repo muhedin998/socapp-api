@@ -4,6 +4,7 @@ import com.example.keklock.common.exception.AlreadyFollowingException;
 import com.example.keklock.common.exception.InvalidOperationException;
 import com.example.keklock.common.exception.NotFollowingException;
 import com.example.keklock.common.exception.ResourceNotFoundException;
+import com.example.keklock.common.service.FileStorageService;
 import com.example.keklock.profile.domain.Profile;
 import com.example.keklock.profile.dto.ProfileResponse;
 import com.example.keklock.profile.dto.UpdateProfileRequest;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Set;
@@ -30,6 +32,7 @@ public class ProfileService {
 
     private final ProfileRepository profileRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final FileStorageService fileStorageService;
 
     @Transactional(readOnly = true)
     public ProfileResponse getProfileByUsername(String username) {
@@ -168,5 +171,37 @@ public class ProfileService {
         return profileRepository.findByIdentityId(identityId)
             .orElseThrow(() -> new ResourceNotFoundException("Profile not found with identityId: " + identityId))
             .getId();
+    }
+
+    @Transactional
+    public ProfileResponse uploadAvatar(String identityId, MultipartFile file) {
+        Profile profile = profileRepository.findByIdentityId(identityId)
+            .orElseThrow(() -> new ResourceNotFoundException("Profile not found with identityId: " + identityId));
+
+        String oldAvatarUrl = profile.getAvatarUrl();
+        if (oldAvatarUrl != null && !oldAvatarUrl.isEmpty()) {
+            String oldFileName = extractFileName(oldAvatarUrl);
+            fileStorageService.deleteFile(oldFileName, FileStorageService.FileType.AVATAR);
+        }
+
+        String fileName = fileStorageService.uploadFile(file, FileStorageService.FileType.AVATAR);
+        String avatarUrl = "/uploads/avatars/" + fileName;
+
+        profile.setAvatarUrl(avatarUrl);
+        Profile updated = profileRepository.save(profile);
+        log.info("Avatar uploaded successfully for user: {}", identityId);
+
+        return ProfileResponse.from(updated);
+    }
+
+    private String extractFileName(String avatarUrl) {
+        if (avatarUrl == null || avatarUrl.isEmpty()) {
+            return null;
+        }
+        int lastSlashIndex = avatarUrl.lastIndexOf('/');
+        if (lastSlashIndex == -1) {
+            return avatarUrl;
+        }
+        return avatarUrl.substring(lastSlashIndex + 1);
     }
 }

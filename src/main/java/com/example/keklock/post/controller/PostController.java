@@ -1,6 +1,7 @@
 package com.example.keklock.post.controller;
 
 import com.example.keklock.common.dto.ApiResponse;
+import com.example.keklock.common.service.FileStorageService;
 import com.example.keklock.post.cqrs.FeedQueryService;
 import com.example.keklock.post.dto.*;
 import com.example.keklock.post.service.PostService;
@@ -11,12 +12,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -26,6 +30,7 @@ public class PostController {
 
     private final PostService postService;
     private final FeedQueryService feedQueryService;
+    private final FileStorageService fileStorageService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<PostResponse>> createPost(
@@ -37,6 +42,18 @@ public class PostController {
         return ResponseEntity
             .status(HttpStatus.CREATED)
             .body(ApiResponse.success("Post created successfully", post));
+    }
+
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadPostImage(
+        @AuthenticationPrincipal Jwt jwt,
+        @RequestParam("file") MultipartFile file
+    ) {
+        String fileName = fileStorageService.uploadFile(file, FileStorageService.FileType.POST_IMAGE);
+        String imageUrl = "/uploads/posts/" + fileName;
+        return ResponseEntity.ok(
+            ApiResponse.success("Image uploaded successfully", Map.of("imageUrl", imageUrl))
+        );
     }
 
     @GetMapping("/{postId}")

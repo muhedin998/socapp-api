@@ -10,10 +10,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/profiles")
@@ -47,6 +49,16 @@ public class ProfileController {
         String identityId = jwt.getSubject();
         ProfileResponse updated = profileService.updateProfile(identityId, request);
         return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", updated));
+    }
+
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ProfileResponse>> uploadAvatar(
+        @AuthenticationPrincipal Jwt jwt,
+        @RequestParam("file") MultipartFile file
+    ) {
+        String identityId = jwt.getSubject();
+        ProfileResponse updated = profileService.uploadAvatar(identityId, file);
+        return ResponseEntity.ok(ApiResponse.success("Avatar uploaded successfully", updated));
     }
 
     @PostMapping("/{username}/follow")
